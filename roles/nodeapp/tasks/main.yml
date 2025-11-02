@@ -1,0 +1,77 @@
+---
+- name: Ensure apt cache is up to date (Debian/Ubuntu)
+  ansible.builtin.apt:
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
+
+- name: Install required packages (git curl build-essential)
+  ansible.builtin.package:
+    name:
+      - git
+      - curl
+      - build-essential
+    state: present
+
+- name: Add NodeSource for Node 18 (Debian/Ubuntu)
+  ansible.builtin.shell: |
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+  args:
+    executable: /bin/bash
+  when: ansible_os_family == 'Debian'
+
+- name: Install nodejs
+  ansible.builtin.package:
+    name: nodejs
+    state: present
+
+- name: Ensure nodeapp user exists
+  ansible.builtin.user:
+    name: "{{ nodeapp_user }}"
+    shell: /bin/bash
+    create_home: yes
+    home: "{{ nodeapp_home }}"
+    state: present
+
+- name: Create application directory
+  file:
+    path: "{{ nodeapp_app_dir }}"
+    state: directory
+    owner: "{{ nodeapp_user }}"
+    group: "{{ nodeapp_user }}"
+    mode: "0755"
+
+- name: Clone application repository
+  ansible.builtin.git:
+    repo: "{{ nodeapp_repo }}"
+    dest: "{{ nodeapp_app_dir }}"
+    version: "{{ nodeapp_version }}"
+    force: yes
+    update: yes
+  become_user: "{{ nodeapp_user }}"
+
+- name: Install npm dependencies
+  ansible.builtin.command: npm ci
+  args:
+    chdir: "{{ nodeapp_app_dir }}"
+  environment:
+    HOME: "{{ nodeapp_home }}"
+  become_user: "{{ nodeapp_user }}"
+
+- name: Place systemd service file
+  ansible.builtin.template:
+    src: nodeapp.service.j2
+    dest: /etc/systemd/system/{{ nodeapp_service_name }}.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Enable and start nodeapp service
+  ansible.builtin.systemd:
+    name: "{{ nodeapp_service_name }}"
+    enabled: yes
+    state: restarted
+    daemon_reload: yes

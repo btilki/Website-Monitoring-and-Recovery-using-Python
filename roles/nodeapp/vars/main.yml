@@ -1,0 +1,14 @@
+---
+# Change this to your GitHub repo after you push this project to GitHub
+# Example: https://github.com/yourusername/ansible-node-deploy.git
+nodeapp_repo: "https://github.com/yourusername/ansible-node-deploy.git"
+
+# Branch or tag to deploy
+nodeapp_version: "main"
+
+# App user & paths
+nodeapp_user: "nodeapp"
+nodeapp_home: "/home/{{ nodeapp_user }}"
+nodeapp_app_dir: "{{ nodeapp_home }}/app"
+nodeapp_service_name: "nodeapp"
+node_app_port: 3000

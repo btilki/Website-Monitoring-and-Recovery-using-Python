@@ -1,0 +1,15 @@
+[Unit]
+Description=Node.js App - {{ nodeapp_service_name }}
+After=network.target
+
+[Service]
+Type=simple
+User={{ nodeapp_user }}
+WorkingDirectory={{ nodeapp_app_dir }}
+ExecStart=/usr/bin/node {{ nodeapp_app_dir }}/server.js
+Restart=always
+Environment=NODE_ENV=production
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

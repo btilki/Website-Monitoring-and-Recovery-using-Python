@@ -1,0 +1,53 @@
+---
+# Optional playbook to create an EC2 instance. Requires amazon.aws collection and boto3.
+# Example usage:
+# ansible-playbook playbooks/create_ec2.yml --extra-vars "aws_region=us-east-1 key_name=my-key security_group=my-sg image_id=ami-0abcdef1234567890 instance_type=t3.micro instance_name=nodeapp-server"
+
+- name: Launch EC2 instance
+  hosts: localhost
+  connection: local
+  gather_facts: no
+  vars:
+    aws_region: us-east-1
+    key_name: your-key-name
+    security_group: your-security-group
+    image_id: ami-xxxxxxxxxxxxxxxxx   # set a valid AMI in your region (Ubuntu 20.04/22.04 recommended)
+    instance_type: t3.micro
+    instance_name: nodeapp-server
+    subnet_id: ""                    # optional
+    remote_user: ubuntu              # change if using Amazon Linux or other image
+  tasks:
+    - name: Launch a single EC2 instance
+      amazon.aws.ec2_instance:
+        name: "{{ instance_name }}"
+        key_name: "{{ key_name }}"
+        instance_type: "{{ instance_type }}"
+        image_id: "{{ image_id }}"
+        region: "{{ aws_region }}"
+        wait: yes
+        count: 1
+        vpc_subnet_id: "{{ subnet_id | default(omit) }}"
+        group: "{{ security_group }}"
+        tags:
+          Name: "{{ instance_name }}"
+      register: ec2
+
+    - name: Add new instance(s) to the in-memory host group
+      add_host:
+        name: "{{ item.public_ip_address }}"
+        groups: appservers
+        ansible_user: "{{ remote_user }}"
+      loop: "{{ ec2.instances }}"
+
+    - name: Wait for SSH to come up on launched instance(s)
+      wait_for:
+        host: "{{ item.public_ip_address }}"
+        port: 22
+        timeout: 300
+        state: started
+      loop: "{{ ec2.instances }}"
+
+    - name: Show instance public IP(s)
+      debug:
+        msg: "Instance public IP: {{ item.public_ip_address }}"
+      loop: "{{ ec2.instances }}"

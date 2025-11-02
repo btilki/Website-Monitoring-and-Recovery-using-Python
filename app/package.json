@@ -1,0 +1,12 @@
+{
+  "name": "nodeapp-sample",
+  "version": "1.0.0",
+  "description": "Sample Node.js app for Ansible deployment demo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "sample",
+  "license": "MIT",
+  "dependencies": {}
+}

@@ -1,15 +1,4 @@
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-env/
-venv/
-.env
-monitor/.env
-
-# Docker
+node_modules/
 *.log
-
-# Others
-.DS_Store
+.vscode/
+*.pem
