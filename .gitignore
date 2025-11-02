@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+.env
+monitor/.env
+
+# Docker
+*.log
+
+# Others
+.DS_Store
